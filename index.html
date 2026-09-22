@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="VIRA - Value-based Inventory & Retail Assistant. Dashboard untuk mengelola inventori, transaksi penjualan, dan pencatatan keuangan.">
+  <title>Dashboard - VIRA</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://unpkg.com/feather-icons"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <!-- Animated Background -->
+  <div class="bg-animation">
+    <div class="orb"></div>
+    <div class="orb"></div>
+    <div class="orb"></div>
+  </div>
+
+  <div class="app-layout">
+    <!-- ======= MOBILE TOP NAVBAR ======= -->
+    <div class="mobile-navbar" id="mobileNavbar">
+      <div class="mobile-navbar-left">
+        <img src="images/logo2.png" alt="VIRA Logo" class="mobile-navbar-logo">
+        <button class="hamburger-btn" id="hamburgerBtn" onclick="toggleSidebar()" aria-label="Toggle menu">
+          <i data-feather="menu"></i>
+        </button>
+      </div>
+      <div class="mobile-navbar-right">
+        <div class="mobile-user-dropdown" id="mobileUserDropdown">
+          <button class="mobile-user-btn" onclick="toggleMobileUserDropdown(event)" aria-label="User menu">
+            <span class="mobile-user-name" id="mobileUserName">Admin</span>
+            <i data-feather="chevron-down" class="mobile-user-chevron"></i>
+          </button>
+          <div class="mobile-user-menu" id="mobileUserMenu">
+            <button class="mobile-user-menu-item" onclick="handleLogout()">
+              <i data-feather="log-out"></i>
+              <span>Keluar</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ======= SIDEBAR ======= -->
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <img src="images/logooo.png" alt="VIRA Logo" class="brand-logo">
+      </div>
+
+      <nav>
+        <div class="nav-link active admin-only" data-page="dashboard" onclick="switchPage('dashboard')">
+          <span class="nav-icon" data-feather="bar-chart-2"></span>
+          <span>Dashboard</span>
+        </div>
+        <div class="nav-link admin-only" data-page="inventory" onclick="switchPage('inventory')">
+          <span class="nav-icon" data-feather="clipboard"></span>
+          <span>Daftar Barang</span>
+        </div>
+        <div class="nav-link" data-page="transaction" onclick="switchPage('transaction')">
+          <span class="nav-icon" data-feather="shopping-cart"></span>
+          <span>Kasir Digital</span>
+        </div>
+        <div class="nav-link" data-page="history" onclick="switchPage('history')">
+          <span class="nav-icon" data-feather="file-text"></span>
+          <span>Riwayat Transaksi</span>
+        </div>
+        <div class="nav-link admin-only" data-page="report" onclick="switchPage('report')">
+          <span class="nav-icon" data-feather="pie-chart"></span>
+          <span>Laporan Penjualan</span>
+        </div>
+        <div class="nav-link admin-only" data-page="alerts" onclick="switchPage('alerts')">
+          <span class="nav-icon" data-feather="bell"></span>
+          <span>Peringatan Stok</span>
+          <span class="badge" id="alertBadge">0</span>
+        </div>
+      </nav>
+
+      <div class="sidebar-footer">
+        <div class="user-info">
+          <div class="avatar" id="userAvatar">A</div>
+          <div>
+            <div class="user-name" id="userName">Admin</div>
+            <div class="user-role" id="userRole">Pengguna</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Sidebar Overlay (Mobile) -->
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+    <!-- ======= MAIN CONTENT ======= -->
+    <main class="main-content">
+
+      <!-- ===== DASHBOARD PAGE (Admin Only) ===== -->
+      <section id="page-dashboard">
+        <div class="page-header">
+          <div>
+            <h1>Dashboard</h1>
+            <p class="subtitle" id="greetingText">Selamat datang kembali!</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-logout" onclick="handleLogout()">
+              <i data-feather="log-out"></i> Keluar
+            </button>
+          </div>
+        </div>
+
+        <!-- Financial Stat Cards (Admin) -->
+        <div class="stats-grid" id="statsGrid">
+          <div class="stat-card total">
+            <div class="stat-icon" data-feather="box"></div>
+            <div class="stat-value" id="statTotal">0</div>
+            <div class="stat-label">Total Jenis Barang</div>
+          </div>
+          <div class="stat-card safe">
+            <div class="stat-icon" data-feather="package"></div>
+            <div class="stat-value" id="statTotalStock">0</div>
+            <div class="stat-label">Total Stok Tersedia</div>
+          </div>
+          <div class="stat-card income">
+            <div class="stat-icon" data-feather="trending-up"></div>
+            <div class="stat-value" id="statGrossIncome">Rp 0</div>
+            <div class="stat-label">Pendapatan Kotor</div>
+          </div>
+          <div class="stat-card profit">
+            <div class="stat-icon" data-feather="dollar-sign"></div>
+            <div class="stat-value" id="statNetIncome">Rp 0</div>
+            <div class="stat-label">Pendapatan Bersih</div>
+          </div>
+        </div>
+
+        <!-- Sales Chart -->
+        <div class="chart-section">
+          <div class="section-title">
+            <i data-feather="activity"></i>
+            Grafik Penjualan (7 Hari Terakhir)
+          </div>
+          <div class="chart-container">
+            <canvas id="salesChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Alerts Section -->
+        <div class="alert-section" id="alertSection">
+          <div class="section-title">
+            <span class="pulse-dot"></span>
+            Peringatan Restok
+          </div>
+          <div class="alert-items" id="alertItems">
+            <!-- Dynamic content -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== INVENTORY PAGE (Admin Only) ===== -->
+      <section id="page-inventory" class="hidden">
+        <div class="page-header">
+          <div>
+            <h1>Daftar Barang</h1>
+            <p class="subtitle">Kelola seluruh barang di warung Anda</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-primary" onclick="openAddModal()">
+              <i data-feather="plus"></i> Tambah Barang
+            </button>
+            <button class="btn btn-logout" onclick="handleLogout()">
+              <i data-feather="log-out"></i> Keluar
+            </button>
+          </div>
+        </div>
+
+        <div class="table-section">
+          <div class="table-header">
+            <div class="section-title"><i data-feather="clipboard"></i> Inventori</div>
+            <div class="search-box">
+              <span class="search-icon" data-feather="search"></span>
+              <input type="text" id="searchInput" placeholder="Cari barang..." oninput="filterItems()">
+            </div>
+          </div>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>No</th>
+                <th>Nama Barang</th>
+                <th>Kategori</th>
+                <th>Stok</th>
+                <th>Min. Stok</th>
+                <th>Harga Jual</th>
+                <th>Harga Modal</th>
+                <th>Status</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="inventoryTableBody">
+              <!-- Dynamic rows -->
+            </tbody>
+          </table>
+
+          <div class="alert-empty hidden" id="emptyTable">
+            <div class="empty-icon"><i data-feather="inbox"></i></div>
+            <p>Belum ada barang. Klik "Tambah Barang" untuk mulai.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== TRANSACTION PAGE ===== -->
+      <section id="page-transaction" class="hidden">
+        <div class="page-header">
+          <div>
+            <h1><i data-feather="shopping-cart"></i> Kasir Digital</h1>
+            <p class="subtitle">Pilih produk di bawah untuk memulai pesanan anda.</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-logout" onclick="handleLogout()">
+              <i data-feather="log-out"></i> Keluar
+            </button>
+          </div>
+        </div>
+
+        <div class="pos-layout">
+          <!-- Left: Product Catalog -->
+          <div class="pos-catalog">
+            <!-- Search Bar -->
+            <div class="pos-search-bar">
+              <span class="pos-search-icon"><i data-feather="search"></i></span>
+              <input type="text" id="posSearchInput" placeholder="Cari barang..." oninput="filterPosProducts()">
+            </div>
+
+            <!-- Product Grid -->
+            <div class="pos-product-grid" id="posProductGrid">
+              <!-- Dynamic product cards -->
+            </div>
+
+            <div class="pos-empty" id="posEmpty" style="display:none;">
+              <div class="empty-icon"><i data-feather="inbox"></i></div>
+              <p>Tidak ada barang ditemukan</p>
+            </div>
+          </div>
+
+          <!-- Right: Cart Sidebar -->
+          <div class="pos-cart-sidebar">
+            <div class="pos-cart-header">
+              <i data-feather="shopping-cart"></i>
+              <span>Keranjang</span>
+              <span class="pos-cart-count" id="posCartCount" style="display:none;">0</span>
+            </div>
+
+            <div class="pos-cart-items" id="posCartItems">
+              <!-- Dynamic cart items -->
+            </div>
+
+            <div class="cart-empty" id="cartEmpty">
+              <div class="empty-icon"><i data-feather="shopping-bag"></i></div>
+              <p>Keranjang masih kosong. Silahkan tap produk untuk memulai pesanan anda.</p>
+            </div>
+
+            <div class="pos-cart-footer" id="cartFooter" style="display:none;">
+              <div class="pos-cart-divider"></div>
+              <div class="pos-cart-summary">
+                <div class="pos-cart-summary-row">
+                  <span>Total Item</span>
+                  <span id="posTotalItems">0</span>
+                </div>
+                <div class="pos-cart-summary-row total">
+                  <span>Total</span>
+                  <span id="cartTotalValue">Rp 0</span>
+                </div>
+              </div>
+              <button class="btn btn-success btn-block btn-lg" onclick="checkout()">
+                <i data-feather="check-circle"></i> Checkout
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== HISTORY PAGE ===== -->
+      <section id="page-history" class="hidden">
+        <div class="page-header">
+          <div>
+            <h1><i data-feather="file-text"></i> Riwayat Transaksi</h1>
+            <p class="subtitle">Semua transaksi yang telah dilakukan</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-logout" onclick="handleLogout()">
+              <i data-feather="log-out"></i> Keluar
+            </button>
+          </div>
+        </div>
+
+        <div class="table-section">
+          <div class="table-header">
+            <div class="section-title"><i data-feather="list"></i> Daftar Transaksi</div>
+            <div class="search-box">
+              <span class="search-icon" data-feather="search"></span>
+              <input type="text" id="searchTransaction" placeholder="Cari transaksi..." oninput="filterTransactions()">
+            </div>
+          </div>
+
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>No. Transaksi</th>
+                <th>Tanggal</th>
+                <th>Kasir</th>
+                <th>Jumlah Item</th>
+                <th>Total</th>
+                <th>Aksi</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody">
+              <!-- Dynamic -->
+            </tbody>
+          </table>
+
+          <div class="alert-empty hidden" id="emptyHistory">
+            <div class="empty-icon"><i data-feather="inbox"></i></div>
+            <p>Belum ada riwayat transaksi.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== ALERTS PAGE (Admin Only) ===== -->
+      <section id="page-alerts" class="hidden">
+        <div class="page-header">
+          <div>
+            <h1><i data-feather="bell"></i> Peringatan Stok</h1>
+            <p class="subtitle">Barang yang harus segera di-restok</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-logout" onclick="handleLogout()">
+              <i data-feather="log-out"></i> Keluar
+            </button>
+          </div>
+        </div>
+
+        <div class="alert-section">
+          <div class="section-title">
+            <span class="pulse-dot"></span>
+            Barang Perlu Restok
+          </div>
+          <div class="alert-items" id="alertPageItems">
+            <!-- Dynamic content -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== REPORT PAGE (Admin Only) ===== -->
+      <section id="page-report" class="hidden">
+        <div class="page-header">
+          <div>
+            <h1><i data-feather="pie-chart"></i> Laporan Penjualan</h1>
+            <p class="subtitle">Analisis penjualan harian, mingguan, bulanan & tahunan</p>
+          </div>
+          <div class="header-actions">
+            <button class="btn btn-primary" onclick="printReport()">
+              <i data-feather="printer"></i> Cetak Laporan
+            </button>
+            <button class="btn btn-export" onclick="exportReportToExcel()">
+              <i data-feather="download"></i> Export Excel
+            </button>
+            <button class="btn btn-logout" onclick="handleLogout()">
+              <i data-feather="log-out"></i> Keluar
+            </button>
+          </div>
+        </div>
+
+        <!-- Period Selector -->
+        <div class="report-controls">
+          <div class="period-tabs">
+            <button class="period-tab active" data-period="daily" onclick="switchReportPeriod('daily')">
+              <i data-feather="calendar"></i> Harian
+            </button>
+            <button class="period-tab" data-period="weekly" onclick="switchReportPeriod('weekly')">
+              <i data-feather="columns"></i> Mingguan
+            </button>
+            <button class="period-tab" data-period="monthly" onclick="switchReportPeriod('monthly')">
+              <i data-feather="grid"></i> Bulanan
+            </button>
+            <button class="period-tab" data-period="yearly" onclick="switchReportPeriod('yearly')">
+              <i data-feather="layers"></i> Tahunan
+            </button>
+          </div>
+          <div class="date-picker-group">
+            <div class="date-picker-wrapper">
+              <label for="reportDatePicker" id="reportDateLabel">Pilih Tanggal</label>
+              <input type="date" id="reportDatePicker" onchange="renderReport()">
+            </div>
+          </div>
+        </div>
+
+        <!-- Report Summary Cards -->
+        <div class="stats-grid report-stats" id="reportStatsGrid">
+          <div class="stat-card total">
+            <div class="stat-icon" data-feather="shopping-bag"></div>
+            <div class="stat-value" id="reportTotalTx">0</div>
+            <div class="stat-label">Total Transaksi</div>
+          </div>
+          <div class="stat-card income">
+            <div class="stat-icon" data-feather="trending-up"></div>
+            <div class="stat-value" id="reportGrossIncome">Rp 0</div>
+            <div class="stat-label">Pendapatan Kotor</div>
+          </div>
+          <div class="stat-card profit">
+            <div class="stat-icon" data-feather="dollar-sign"></div>
+            <div class="stat-value" id="reportNetIncome">Rp 0</div>
+            <div class="stat-label">Laba Bersih</div>
+          </div>
+          <div class="stat-card safe">
+            <div class="stat-icon" data-feather="package"></div>
+            <div class="stat-value" id="reportTotalItems">0</div>
+            <div class="stat-label">Total Barang Terjual</div>
+          </div>
+        </div>
+
+        <!-- Report Chart -->
+        <div class="chart-section">
+          <div class="section-title">
+            <i data-feather="bar-chart-2"></i>
+            <span id="reportChartTitle">Grafik Pendapatan Harian</span>
+          </div>
+          <div class="chart-container">
+            <canvas id="reportChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Top Selling Items -->
+        <div class="report-detail-grid">
+          <div class="table-section">
+            <div class="table-header">
+              <div class="section-title"><i data-feather="award"></i> Barang Terlaris</div>
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>No</th>
+                  <th>Nama Barang</th>
+                  <th>Qty Terjual</th>
+                  <th>Pendapatan</th>
+                </tr>
+              </thead>
+              <tbody id="reportTopItemsBody">
+                <!-- Dynamic -->
+              </tbody>
+            </table>
+            <div class="alert-empty hidden" id="emptyTopItems">
+              <div class="empty-icon"><i data-feather="inbox"></i></div>
+              <p>Belum ada data penjualan.</p>
+            </div>
+          </div>
+
+          <div class="table-section">
+            <div class="table-header">
+              <div class="section-title"><i data-feather="list"></i> Detail Transaksi</div>
+            </div>
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>No. Transaksi</th>
+                  <th>Tanggal</th>
+                  <th>Kasir</th>
+                  <th>Total</th>
+                </tr>
+              </thead>
+              <tbody id="reportTxListBody">
+                <!-- Dynamic -->
+              </tbody>
+            </table>
+            <div class="alert-empty hidden" id="emptyReportTx">
+              <div class="empty-icon"><i data-feather="inbox"></i></div>
+              <p>Tidak ada transaksi pada periode ini.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ======= ADD/EDIT ITEM MODAL ======= -->
+  <div class="modal-overlay" id="itemModal">
+    <div class="modal">
+      <div class="modal-title" id="modalTitle">
+        <i data-feather="plus"></i> Tambah Barang Baru
+      </div>
+
+      <div class="modal-body">
+        <form id="itemForm" onsubmit="return handleSaveItem(event)">
+          <input type="hidden" id="editItemId">
+
+          <div class="form-group">
+            <label for="itemName">Nama Barang</label>
+            <div class="input-wrapper">
+              <input type="text" id="itemName" placeholder="Contoh: Mie Instan" required>
+              <span class="input-icon"><i data-feather="tag"></i></span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="itemCategory">Kategori</label>
+            <div class="input-wrapper">
+              <input type="text" id="itemCategory" placeholder="Contoh: Makanan" required>
+              <span class="input-icon"><i data-feather="folder"></i></span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="itemStock">Stok Saat Ini</label>
+            <div class="input-wrapper">
+              <input type="number" id="itemStock" placeholder="0" min="0" required>
+              <span class="input-icon"><i data-feather="bar-chart"></i></span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="itemMinStock">Batas Minimum Stok</label>
+            <div class="input-wrapper">
+              <input type="number" id="itemMinStock" placeholder="10" min="0" required>
+              <span class="input-icon"><i data-feather="alert-triangle"></i></span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="itemPrice">Harga Jual (Rp)</label>
+            <div class="input-wrapper">
+              <input type="number" id="itemPrice" placeholder="5000" min="0" required>
+              <span class="input-icon"><i data-feather="dollar-sign"></i></span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="itemCostPrice">Harga Modal (Rp)</label>
+            <div class="input-wrapper">
+              <input type="number" id="itemCostPrice" placeholder="3000" min="0" required>
+              <span class="input-icon"><i data-feather="dollar-sign"></i></span>
+            </div>
+          </div>
+
+          <div class="modal-actions">
+            <button type="button" class="btn btn-ghost" onclick="closeModal()">Batal</button>
+            <button type="submit" class="btn btn-primary" id="saveBtn"><i data-feather="save"></i> Simpan</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= DELETE CONFIRM MODAL ======= -->
+  <div class="modal-overlay" id="deleteModal">
+    <div class="modal">
+      <div class="modal-title">
+        <i data-feather="trash-2"></i> Hapus Barang
+      </div>
+      <p style="color: var(--text-secondary); margin-bottom: 8px;">Apakah Anda yakin ingin menghapus barang ini?</p>
+      <p style="font-weight: 700; font-size: 1.05rem;" id="deleteItemName"></p>
+
+      <div class="modal-actions">
+        <button class="btn btn-ghost" onclick="closeDeleteModal()">Batal</button>
+        <button class="btn btn-danger" id="confirmDeleteBtn" onclick="confirmDelete()"><i data-feather="trash-2"></i> Hapus</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= RECEIPT MODAL ======= -->
+  <div class="modal-overlay" id="receiptModal">
+    <div class="modal receipt-modal">
+      <div class="receipt-content" id="receiptContent">
+        <!-- Dynamic receipt -->
+      </div>
+      <div class="modal-actions receipt-actions no-print">
+        <button class="btn btn-ghost" onclick="closeReceiptModal()">Tutup</button>
+        <button class="btn btn-primary" onclick="printReceipt()">
+          <i data-feather="printer"></i> Cetak Struk
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= REPORT PRINT MODAL ======= -->
+  <div class="modal-overlay" id="reportPrintModal">
+    <div class="modal receipt-modal report-print-modal">
+      <div class="receipt-content" id="reportPrintContent">
+        <!-- Dynamic report -->
+      </div>
+      <div class="modal-actions receipt-actions no-print">
+        <button class="btn btn-ghost" onclick="closeReportPrintModal()">Tutup</button>
+        <button class="btn btn-primary" onclick="doPrintReport()">
+          <i data-feather="printer"></i> Cetak Laporan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <p class="loading-text">Memuat data...</p>
+  </div>
+
+    <script>
+      feather.replace();
+    </script>
+
+  <script src="js/api.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
