@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" viewport-fit=cover>
+  <meta name="description" content="VIRA - Value-based Inventory & Retail Assistant. Login untuk mengelola inventori dan penjualan Anda.">
+  <title>Login - VIRA</title>
+  <link rel="stylesheet" href="css/style.css">
+  <script src="https://unpkg.com/feather-icons"></script>
+</head>
+<body>
+  <!-- Login Page Container -->
+  <div class="login-page">
+    <!-- Left: Form -->
+    <div class="login-form-container">
+      <div class="logo">
+        <div class="icon"><img src="images/logooo.png" alt="VIRA Logo" class="logo-img"></div>
+        <p class="login-subtitle">Masuk ke akun Anda</p>
+      </div>
+
+      <!-- Error Message -->
+      <div class="login-error" id="loginError">
+        <span><i data-feather="alert-circle"></i></span>
+        <span id="loginErrorMsg">Username atau password salah!</span>
+      </div>
+
+      <!-- Login Form -->
+      <form id="loginForm" onsubmit="return handleLogin(event)">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <div class="input-wrapper">
+            <input type="text" id="username" placeholder="Masukkan username" autocomplete="username" required>
+            <span class="input-icon"><i data-feather="user"></i></span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label for="password">Password</label>
+          <div class="input-wrapper">
+            <input type="password" id="password" placeholder="Masukkan password" autocomplete="current-password" required>
+            <span class="input-icon"><i data-feather="lock"></i></span>
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block btn-lg" id="loginBtn">
+          Masuk
+        </button>
+      </form>
+
+      <div class="login-footer">
+        <p>Akun: <span>admin</span>/<span>admin</span> · <span>kasir</span>/<span>kasir</span></p>
+      </div>
+    </div>
+
+    <!-- Right: Illustration -->
+    <div class="login-illustration-container">
+      <img src="images/login-img.png" alt="Ilustrasi VIRA - Kasir Digital" class="login-illustration">
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+    <p class="loading-text">Memuat data...</p>
+  </div>
+
+  <script>
+    feather.replace();
+  </script>
+  <script src="js/api.js"></script>
+  <script src="js/auth.js"></script>
+</body>
+</html>
